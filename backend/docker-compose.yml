@@ -1,0 +1,8 @@
+
+
+networks:
+  ticket-net:
+    driver: bridge
+include:
+  - movie-ticketing-system/keycloak/docker-compose.yml
+  - movie-ticketing-system/users-service/docker-compose.yml
