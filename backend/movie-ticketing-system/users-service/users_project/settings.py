@@ -40,11 +40,13 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'users',
+    'corsheaders'
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -157,3 +159,7 @@ KEYCLOAK_CONFIG={
     'CLIENT_SECREAT':env("KEYCLOAK_CLIENT_SECREAT",default="secreat-key")
 }
 AUTH_USER_MODEL = 'users.CustomUser'
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",    
+]
