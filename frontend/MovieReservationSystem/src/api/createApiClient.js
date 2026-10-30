@@ -35,7 +35,7 @@ export function createApiClient(baseURL) {
       const status = error.response?.status;
       const isRefreshCall = originalRequest?.url?.includes("/user/token/refresh/");
 
-      if (status === 401 && !originalRequest._retry && !isRefreshCall) {
+      if ((status === 401 || status === 403) && !originalRequest._retry && !isRefreshCall) {
         if (isRefreshing) {
           return new Promise((resolve, reject) => {
             pendingRequests.push((newAccessToken) => {
@@ -54,10 +54,10 @@ export function createApiClient(baseURL) {
           if (!refresh_token) throw error;
 
           const { data } = await axios.post(REFRESH_URL, { refresh_token });
-          const newAccessToken = data.access_token ?? data.access;
+          const newAccessToken = data.accessToken ?? data.access_token ?? data.access;
           setTokens({
             access: newAccessToken,
-            refresh: data.refresh_token ?? data.refresh ?? refresh_token,
+            refresh: data.refreshToken ?? data.refresh_token ?? data.refresh ?? refresh_token,
           });
 
           resolvePending(newAccessToken);

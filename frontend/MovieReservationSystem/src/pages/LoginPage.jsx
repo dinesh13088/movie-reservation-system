@@ -32,10 +32,9 @@ export default function LoginPage({ onSuccess, onNavigateToSignUp }) {
       setLoading(true);
       const { data } = await loginUser({ username, password });
 
-      // Adjust these keys to match your API's actual response shape.
       setTokens({
-        access: data.access_token ?? data.access,
-        refresh: data.refresh_token ?? data.refresh,
+        access: data.accessToken ?? data.access_token ?? data.access,
+        refresh: data.refreshToken ?? data.refresh_token ?? data.refresh,
       });
 
       onSuccess?.(data);
