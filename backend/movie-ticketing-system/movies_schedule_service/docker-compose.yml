@@ -5,29 +5,100 @@ services:
     environment:
       POSTGRES_DB: movies_db
       POSTGRES_USER: admin
-      POSTGRES_PASSWORD: password 
+      POSTGRES_PASSWORD: password
     ports:
       - "5436:5432"
     volumes:
       - postgres_movies_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d movies_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     networks:
-      - ticket-net 
+      - ticket-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: movies-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_movies_data:/data
+    networks:
+      - ticket-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
   movies-services:
     build: .
     container_name: movies-services
+    entrypoint: ["/app/entrypoint.sh"]
     command: python manage.py runserver 0.0.0.0:8002
     env_file:
       - .env
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
     volumes:
       - .:/app
     ports:
       - "8002:8002"
     depends_on:
-      - movies-db
+      movies-db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - ticket-net
+
+  movies-worker:
+    build: .
+    container_name: movies-worker
+    entrypoint: ["/app/entrypoint.sh"]
+    command: celery -A movie_services worker -l info --without-gossip --without-mingle
+    env_file:
+      - .env
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+    volumes:
+      - .:/app
+    depends_on:
+      movies-db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - ticket-net
+
+  movies-beat:
+    build: .
+    container_name: movies-beat
+    entrypoint: ["/app/entrypoint.sh"]
+    command: celery -A movie_services beat -l info
+    env_file:
+      - .env
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+    volumes:
+      - .:/app
+    depends_on:
+      movies-db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - ticket-net
+
 volumes:
   postgres_movies_data:
+  redis_movies_data:
+
 networks:
   ticket-net:
     external: true

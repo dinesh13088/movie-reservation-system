@@ -142,3 +142,36 @@ REST_FRAMEWORK = {
         "rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly"
     ]
 }
+KEYCLOAK_CONFIG = {
+    'SERVER_URL': env("KEYCLOAK_SERVER_URL", default='http://keycloak:8080'),
+    'REALM_NAME': env("KEYCLOAK_REALM_NAME", default='movie-ticketing-system'),
+    'CLIENT_ID': env("KEYCLOAK_CLIENT_ID", default='movie-ticketing-react'),
+    'ADMIN_CLIENT_ID': env("KEYCLOAK_ADMIN_CLIENT_ID", default='django-admin-client'),
+    'ADMIN_CLIENT_SECREAT': env("KEYCLOAK_ADMIN_CLIENT_SECREAT", default='secreat key'),
+    'CLIENT_SECREAT': env("KEYCLOAK_CLIENT_SECREAT", default="secreat-key"),
+}
+
+REDIS_HOST = env("REDIS_HOST", default="localhost")
+REDIS_PORT = env("REDIS_PORT", default=6379)
+
+CELERY_BROKER_URL = env("CELERY_BROKER_URL", default=f"redis://{REDIS_HOST}:{REDIS_PORT}/0")
+CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND", default=f"redis://{REDIS_HOST}:{REDIS_PORT}/1")
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 30 * 60
+CELERY_TASK_ACKS_LATE = True
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+CELERY_WORKER_MAX_TASKS_PER_CHILD = 10
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+
+from celery.schedules import crontab  # noqa: E402
+
+CELERY_BEAT_SCHEDULE = {
+    "scrape-movies-daily-23:00": {
+        "task": "movies.tasks.scrape_movies",
+        "schedule": crontab(hour=23, minute=0),
+    },
+}

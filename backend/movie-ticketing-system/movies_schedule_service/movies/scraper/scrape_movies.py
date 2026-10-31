@@ -78,7 +78,7 @@ def scrape_movies():
         movies, seen = [], set()
         for item in raw:
             title = item.get("title") or "N/A"
-            if title in seen:          # avoid duplicates if the page repeats cards
+            if title in seen:      
                 continue
             seen.add(title)
 

@@ -22,3 +22,8 @@ RUN pip install --no-cache-dir --upgrade pip \
 
 # Copy application source code
 COPY . /app/
+
+# Entrypoint that runs migrations before starting the app/worker/beat.
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+ENTRYPOINT ["/app/entrypoint.sh"]
